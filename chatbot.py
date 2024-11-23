@@ -270,11 +270,14 @@ def handle_voice_search():
             search_entry.delete(0, tk.END)
             search_entry.insert(0, query)
 
-            # Add recognized text to chat history
-            display_text_response(f"You said: {query}")
+            intent_replies = load_intent_replies()
+            if query.lower() in intent_replies:
+              display_text_response(intent_replies[query.lower()])
+              clear_search_inputs()
+            else:
+                handle_text_search(query)
             
-            # Proceed with handling the search
-            handle_text_search(query)
+
 
         except sr.UnknownValueError:
             status_label.config(text="Sorry, I couldn't understand that. Please try again.")

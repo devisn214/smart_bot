@@ -93,12 +93,21 @@ def compare_images(image_path1, image_path2):
 
 # Sentiment analysis using VADER
 sid = SentimentIntensityAnalyzer()
+
 def compute_sentiment_score(review_text):
     if isinstance(review_text, str) and review_text.strip():
-        sentiment = sid.polarity_scores(review_text)
-        return sentiment['compound']
+        # Split the reviews if there are multiple, separated by commas
+        reviews = review_text.split(",") if "," in review_text else [review_text]
+        
+        # Calculate sentiment for each review
+        sentiment_scores = [sid.polarity_scores(review)['compound'] for review in reviews]
+        
+        # Calculate the average sentiment score
+        average_sentiment_score = np.mean(sentiment_scores)
+        return average_sentiment_score
     else:
-        return 0.0  # Return a neutral sentiment score for invalid text
+        return 0.0  # Return a neutral sentiment score for invalid or empty text
+
 
 # Preprocess text (remove stopwords, tokenize, and lower case)
 def preprocess_text(text):
@@ -113,13 +122,8 @@ def get_image_url(image_url):
         return 'default_image.jpg'  # A placeholder image URL if invalid or NaN
     return image_url
 
-# Get category recommendations based on sentiment score
-def get_category_recommendations(category, sentiment_score):
-    category_products = products_df[products_df['categories'].str.contains(category, case=False, na=False)]
-    category_products['sentiment_score'] = category_products['top_review'].apply(compute_sentiment_score)
-    recommended_products = category_products.sort_values(by='sentiment_score', ascending=False)
-    top_recommended_products = recommended_products.head(5)
-    return top_recommended_products[['title', 'url', 'image_url', 'sentiment_score', 'rating', 'top_review','categories']].to_dict(orient='records')
+
+
 
 # Route to handle image search
 @app.route('/api/image-search', methods=['POST'])

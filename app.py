@@ -122,7 +122,39 @@ def get_image_url(image_url):
         return 'default_image.jpg'  # A placeholder image URL if invalid or NaN
     return image_url
 
+def get_product_data(product_names):
+    comparison_data = []
+    for product_name in product_names:
+        # Use a case-insensitive match to find all relevant products
+        matching_products = products_df[products_df['title'].str.lower().apply(lambda x: product_name.lower() in x.split())]
+        
+        # Iterate through the matching products DataFrame
+        for _, row in matching_products.iterrows():
+            comparison_data.append({
+                'name': row['title'],  # Use the product title from the row
+                'price': row['initial_price'],
+                'rating': row['rating'],
+                'reviews': row['top_review'],
+                'url': row['url'],
+                'image_url': get_image_url(row['image_url']),
+                'availability': row['availability']
+            })
+    return comparison_data
 
+
+
+
+# Route to handle product comparison
+@app.route('/api/compare-products', methods=['POST'])
+def compare_products():
+    # Get product names from the frontend (in a JSON format)
+    product_names = request.json.get('products')
+    
+    # Call the comparison function
+    comparison_data = get_product_data(product_names)
+    
+    # Return the data as JSON response
+    return jsonify(comparison_data)
 
 
 # Route to handle image search

@@ -295,7 +295,89 @@ def handle_voice_search():
             status_label.config(text="")
 
             
+# Function to handle product comparison
+def handle_product_comparison():
+    # Get the product names from the user input
+    comparison_query = search_entry.get().strip()
+    
+    if not comparison_query:
+        messagebox.showwarning("Input Error", "Please enter product names to compare, separated by commas.")
+        return
 
+    # Split the query into product names
+    product_names = [name.strip() for name in comparison_query.split(',') if name.strip()]
+
+    if not product_names:
+        messagebox.showwarning("Input Error", "Please enter valid product names.")
+        return
+
+    # Display loading message
+    display_loading_message(status_label)
+
+    # Make a POST request to the backend API for product comparison
+    try:
+        response = requests.post(f"{BASE_URL}/compare-products", json={"products": product_names})
+        clear_loading_message(status_label)
+
+        if response.status_code == 200:
+            comparison_results = response.json()
+            if not comparison_results:
+                messagebox.showinfo("No Results", "No products to compare. Please try different names.")
+            else:
+                display_comparison_results(comparison_results)
+            
+        else:
+            messagebox.showerror("Comparison Error", response.json().get("error", "Unable to fetch comparison data."))
+    except requests.RequestException as e:
+        clear_loading_message(status_label)
+        messagebox.showerror("Network Error", f"An error occurred: {e}")
+
+# Function to display comparison results
+def display_comparison_results(products):
+    # Clear previous results
+    for widget in scrollable_frame.winfo_children():
+        widget.destroy()
+
+    tk.Label(scrollable_frame, text="Product Comparison Results", 
+             font=("Arial", 14, "bold"), fg="BLACK").pack(anchor="w", pady=(10, 0))
+
+    # Create a table for displaying comparison results
+    columns = ["Name", "Price", "Rating", "Review", "Link","Availabilty"]
+    table_frame = tk.Frame(scrollable_frame)
+    table_frame.pack(fill="x", padx=10, pady=10)
+
+    # Add column headers
+    for col_index, col_name in enumerate(columns):
+        header = tk.Label(table_frame, text=col_name, font=("Arial", 10, "bold"), bg="#D3D3D3", borderwidth=1, relief="solid")
+        header.grid(row=0, column=col_index, sticky="nsew", padx=1, pady=1)
+    
+    # Add product rows
+    for row_index, product in enumerate(products, start=1):
+        truncated_name = textwrap.shorten(product.get('name', 'No Name Available'), width=60)
+        price = product.get('price', 'N/A')
+        rating = product.get('rating', 'N/A')
+        review = str(product.get('reviews', 'No Review Available'))
+        review = textwrap.shorten(review, width=100)
+        url = product.get('url', '')
+        availability = product.get('availability', 'N/A')
+   
+        
+
+        # Populate the table rows
+        tk.Label(table_frame, text=truncated_name, font=("Arial", 10), borderwidth=1, relief="solid", wraplength=200).grid(row=row_index, column=0, sticky="nsew", padx=1, pady=1)
+        tk.Label(table_frame, text=price, font=("Arial", 10), borderwidth=1, relief="solid").grid(row=row_index, column=1, sticky="nsew", padx=1, pady=1)
+        tk.Label(table_frame, text=rating, font=("Arial", 10), borderwidth=1, relief="solid").grid(row=row_index, column=2, sticky="nsew", padx=1, pady=1)
+        tk.Label(table_frame, text=review, font=("Arial", 10), borderwidth=1, relief="solid", wraplength=300).grid(row=row_index, column=3, sticky="nsew", padx=1, pady=1)
+        tk.Label(table_frame, text=availability, font=("Arial", 10), borderwidth=1, relief="solid").grid(row=row_index, column=5, sticky="nsew", padx=1, pady=1)
+        
+        
+        # Create a clickable link for the product
+        link_label = tk.Label(table_frame, text="View Product", fg="#b23456", cursor="hand2", font=("Arial", 10, "underline"), borderwidth=1, relief="solid")
+        link_label.grid(row=row_index, column=4, sticky="nsew", padx=1, pady=1)
+        link_label.bind("<Button-1>", lambda e, url=url: open_product_page(url))
+
+
+       
 
 # Open product page in browser
 
@@ -359,6 +441,9 @@ image_search_button.pack(pady=5, fill="x")
 voice_search_button = tk.Button(button_frame, text="Search by Audio", font=("Arial", 12), bg="#D8AF3D", command=handle_voice_search)
 voice_search_button.pack(pady=5, fill="x")
 
+comparison_button = tk.Button(button_frame, text="Compare Products", font=("Arial", 12),bg="#D8AF3D", command=handle_product_comparison)
+comparison_button.pack(pady=5, fill="x")
+
 # Order search label above the order number search box
 order_search_label = tk.Label(background_frame, text="Order Status Search", font=("Arial", 12, "bold"), fg="#FFFFFF",bg="#3B2F2F")
 order_search_label.pack(pady=(10, 0))  # Adds some padding for space
@@ -370,6 +455,9 @@ order_entry.pack(pady=(10, 0))
 # Order status search button
 order_status_button = tk.Button(background_frame, text="Search Order Status", font=("Arial", 12), bg="#D8AF3D", command=lambda: handle_order_status_search(order_entry.get()))
 order_status_button.pack(pady=5)
+
+
+
 
 # Clear chat history button
 clear_button = tk.Button(background_frame, text="Clear Results", font=("Arial", 12), command=clear_chat_history, bg="#D8AF3D")

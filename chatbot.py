@@ -151,7 +151,7 @@ def display_category_recommendations(products):
                 img_label.pack(side="left", padx=(0, 10))
             except (requests.RequestException, IOError):
                 # Default placeholder
-                placeholder = Image.open("placeholder.png")
+                placeholder = Image.open("noimages.jpg")
                 placeholder.thumbnail((100, 100))
                 img = ImageTk.PhotoImage(placeholder)
                 img_label = tk.Label(result_frame, image=img)
@@ -347,7 +347,7 @@ button_frame = tk.Frame(background_frame, bg="#3B2F2F", padx=20, pady=20)
 button_frame.pack(pady=(10, 0))
 
 # Buttons for different searches
-search_button = tk.Button(button_frame, text="Search for products", font=("Arial", 12), bg="#D8AF3D", command=lambda: handle_text_search(search_entry.get()))
+search_button = tk.Button(button_frame, text="Search by Product Title", font=("Arial", 12), bg="#D8AF3D", command=lambda: handle_text_search(search_entry.get()))
 search_button.pack(pady=5, fill="x")
 
 faq_search_button = tk.Button(button_frame, text="FAQ Search", font=("Arial", 12), bg="#D8AF3D", command=handle_faq_search)
